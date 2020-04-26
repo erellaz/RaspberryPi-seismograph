@@ -1,4 +1,4 @@
- #define _GNU_SOURCE
+#define _GNU_SOURCE
 #include <stdlib.h>     //exit()
 #include <signal.h>     //signal()
 #include <time.h>
@@ -23,13 +23,49 @@ void  Handler(int signo)
 
     exit(0);
 }
-int main(void)
+int main(int argc,char *argv[])
 {
     int32_t  ADC[3];
     double ADC_V[3];
     printf("Program Started\r\n");
-
-    double _conversionFactor = 1.0;
+    
+    int ampgain=1; //Board amplifier gain
+    double numgain = 1.0; //Numerical gain applied in the program 
+    int si=1;//Board sample interval
+    char *dpath = "./";//Path for the output
+    
+    //Start parameter file read
+    if(argc!=2) {
+        printf("No parameter file passed. Using default parameters.\n");
+        printf("\nAmp Gain: %d \nNum Gain: %f \nSample Interv: %d \nOutput path : %s \n\n",ampgain,numgain,si,dpath);}
+    else {
+        FILE * fr = fopen(argv[1], "rt");
+        if(fr == NULL){printf("file %s not found", argv[1]);}
+        char tmpstr1[16];
+        char tmpstr2[64];
+        char tempbuff[100];
+        while(!feof(fr)) {
+           if (fgets(tempbuff,100,fr)) {
+            sscanf(tempbuff, "%15s : %64s", tmpstr1, tmpstr2);
+            //printf("<<%s>>\n",  tmpstr1);
+            //printf("<<%s>>\n",  tmpstr2);
+            if (strcmp(tmpstr1,"AmpGain")==0) {
+                 ampgain = atoi(tmpstr2);} 
+            else if (strcmp(tmpstr1,"NumGain")==0) {
+                 numgain =atof(tmpstr2);}
+            else if (strcmp(tmpstr1,"SampInt")==0) {
+                 si = atoi(tmpstr2);} 
+            else if (strcmp(tmpstr1,"Path")==0) {
+                 dpath =tmpstr2;}    
+            else{printf("Unrecongized parameter : \"%s\"\n", tmpstr1);}
+            }
+         }
+    fclose(fr);
+    printf("\nAmp Gain: %d \nNum Gain: %f \nSample Interv: %d \nOutput path : %s \n\n",ampgain,numgain,si,dpath);
+    }
+    //end parameter file read
+    
+    double _conversionFactor = numgain;
     double _pga = 64;
     DEV_ModuleInit();
     DEV_Digital_Write(DEV_CS_PIN, 1);
@@ -42,7 +78,45 @@ int main(void)
         DEV_ModuleExit();
         exit(0);
     }
+    //---------
+    //Parametrizing the sample rate and gain according to parameter file
+    ADS1256_GAIN inigain=ADS1256_GAIN_64;
+    ADS1256_DRATE inidrate=ADS1256_7500SPS;
+    switch (ampgain) 
+    { 
+       case 64: inigain=ADS1256_GAIN_64; 
+                _pga = 64;
+               break; 
+       case 32: inigain=ADS1256_GAIN_32; 
+               _pga = 32;
+               break; 
+       case 16: inigain=ADS1256_GAIN_16; 
+               _pga = 16;
+               break; 
+       case 8: inigain=ADS1256_GAIN_8; 
+               _pga = 8;
+               break;        
+       default: inigain=ADS1256_GAIN_64; 
+               _pga = 64;
+               break;   
+    } 
     
+    switch (si) 
+    { 
+       case 7500: inidrate=ADS1256_7500SPS; 
+               break; 
+       case 15000: inidrate=ADS1256_15000SPS; 
+                break; 
+       case 3750: inidrate=ADS1256_3750SPS; 
+               break; 
+       case 2000: inidrate=ADS1256_2000SPS; 
+               break;        
+       default: inidrate=ADS1256_7500SPS; 
+                break;   
+    } 
+    ADS1256_ConfigADC(inigain,inidrate);
+    printf("Setting Amplifier gain to: %d and SPS to: %d\n",inigain,inidrate);
+    //---------
     DEV_Digital_Write(DEV_CS_PIN, 0);
 
     FILE *pFile;
@@ -51,13 +125,15 @@ int main(void)
     struct tm * time_info;
     char timeString[20];  // space for "HH:MM:SS\0"
     int changed = 0;
-
+    char pfilename[64];  //for full path name
 
     time(&current_time);
     time_info = localtime(&current_time);
     strftime(timeString, sizeof(timeString), "%Y%m%d_%H%M%S.txt", time_info);
-    pFile = fopen( timeString,"w" );
-   
+    strcpy(pfilename,dpath);
+    strcat(pfilename,timeString);
+    //pFile = fopen( timeString,"w" );
+    pFile = fopen(pfilename,"w" );
     
     if( NULL == pFile ){
         printf( "open failure" );
@@ -174,7 +250,10 @@ int main(void)
                 {
                     strftime(timeString, sizeof(timeString), "%Y%m%d_%H%M%S.txt", time_info);
                     fclose(pFile);
-                    pFile = fopen( timeString,"w" );
+                    strcpy(pfilename,dpath);
+                    strcat(pfilename,timeString);
+                    //pFile = fopen( timeString,"w" );
+                    pFile = fopen(pfilename,"w" );
                     changed = 1;
                 }
                 if ((time_info->tm_min % 5 == 1) & (changed == 1))
