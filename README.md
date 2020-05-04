@@ -13,3 +13,6 @@ https://github.com/erellaz/seisberry
 ## Detailed help file
 For a detailed guide on how to make a RaspberryPi seismograph, you can visit:
 http://erellaz.com/seisberry
+
+Also read the complete Jupyter note book with install details and an explanation of the code:
+https://github.com/erellaz/seisberry/blob/master/seisberry.ipynb
