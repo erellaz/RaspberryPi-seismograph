@@ -1,4 +1,4 @@
-#define _GNU_SOURCE
+ #define _GNU_SOURCE
 #include <stdlib.h>     //exit()
 #include <signal.h>     //signal()
 #include <time.h>
@@ -95,7 +95,16 @@ int main(int argc,char *argv[])
                break; 
        case 8: inigain=ADS1256_GAIN_8; 
                _pga = 8;
-               break;        
+               break;
+       case 4: inigain=ADS1256_GAIN_4; 
+               _pga = 4;
+               break; 
+       case 2: inigain=ADS1256_GAIN_2; 
+               _pga = 2;
+               break; 
+       case 1: inigain=ADS1256_GAIN_1; 
+               _pga = 1;
+               break;
        default: inigain=ADS1256_GAIN_64; 
                _pga = 64;
                break;   
@@ -103,14 +112,38 @@ int main(int argc,char *argv[])
     
     switch (si) 
     { 
-       case 7500: inidrate=ADS1256_7500SPS; 
-               break; 
-       case 15000: inidrate=ADS1256_15000SPS; 
+       case 30000: inidrate=ADS1256_30000SPS; 
                 break; 
+       case 15000: inidrate=ADS1256_15000SPS; 
+                break;
+       case 7500: inidrate=ADS1256_7500SPS; 
+               break;
        case 3750: inidrate=ADS1256_3750SPS; 
                break; 
        case 2000: inidrate=ADS1256_2000SPS; 
-               break;        
+               break;
+       case 1000: inidrate=ADS1256_1000SPS; 
+               break;
+       case 500: inidrate=ADS1256_500SPS; 
+               break;
+       case 100: inidrate=ADS1256_100SPS; 
+               break;
+       case 60: inidrate=ADS1256_60SPS; 
+               break; 
+       case 50: inidrate=ADS1256_50SPS; 
+               break;
+       case 30: inidrate=ADS1256_30SPS; 
+               break;
+       case 25: inidrate=ADS1256_25SPS; 
+               break;
+       case 15: inidrate=ADS1256_15SPS; 
+               break;
+       case 10: inidrate=ADS1256_10SPS; 
+               break;
+       case 5: inidrate=ADS1256_5SPS; 
+               break;
+       case 2: inidrate=ADS1256_2d5SPS; 
+               break;
        default: inidrate=ADS1256_7500SPS; 
                 break;   
     } 
